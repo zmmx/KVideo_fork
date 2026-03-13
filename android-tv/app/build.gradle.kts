@@ -15,12 +15,26 @@ android {
         versionName = "1.0.0"
     }
 
+    signingConfigs {
+        create("release") {
+            // Keystore from GitHub Secrets
+            val keystoreBase64 = System.getenv("KEYSTORE_BASE64")
+            if (keystoreBase64 != null && keystoreBase64.isNotEmpty()) {
+                storeFile = file("$buildDir/keystore.jks")
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+                keyAlias = System.getenv("KEY_ALIAS") ?: "kvideotv"
+                keyPassword = System.getenv("KEY_ALIAS_PASSWORD") ?: storePassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt")
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
