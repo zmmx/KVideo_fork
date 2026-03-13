@@ -5,6 +5,16 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type (release or debug)'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
 
 jobs:
   build:
@@ -33,10 +43,28 @@ jobs:
           ndk: '25.2.9519653'
           cmake: '3.22.1'
 
-      - name: Build Debug APK
+      - name: Prepare keystore for release
+        if: ${{ inputs.build_type == 'release' }}
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android-tv/keystore.jks
+          echo "Keystore written to android-tv/keystore.jks"
+          echo "ORG_GRADLE_PROJECT_KEYSTORE_FILE=android-tv/keystore.jks" >> $GITHUB_ENV
+          echo "ORG_GRADLE_PROJECT_KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+          echo "ORG_GRADLE_PROJECT_KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
+          echo "ORG_GRADLE_PROJECT_KEY_ALIAS_PASSWORD=${{ secrets.KEY_ALIAS_PASSWORD }}" >> $GITHUB_ENV
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
+      - name: Build APK
         run: |
           cd android-tv
-          gradle --no-daemon assembleDebug
+          if [ "${{ inputs.build_type }}" = "release" ]; then
+            echo "Building RELEASE with signing"
+            gradle --no-daemon assembleRelease
+          else
+            echo "Building DEBUG"
+            gradle --no-daemon assembleDebug
+          fi
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/25.2.9519653
@@ -44,5 +72,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: kvideo-tv-debug
-          path: android-tv/app/build/outputs/apk/debug/*.apk
+          name: kvideo-tv-${{ inputs.build_type }}
+          path: |
+            android-tv/app/build/outputs/apk/debug/*.apk
+            android-tv/app/build/outputs/apk/release/*.apk
