@@ -7,7 +7,10 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.view.KeyEvent
 import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import android.view.WindowManager
+import android.widget.FrameLayout
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -25,6 +28,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private lateinit var webView: WebView
+    private lateinit var fullscreenContainer: FrameLayout
+
+    private var customView: View? = null
+    private var customViewCallback: WebChromeClient.CustomViewCallback? = null
+    private var originalOrientation: Int = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,20 +45,15 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
-        // Fullscreen immersive mode
+        // Keep screen on
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        @Suppress("DEPRECATION")
-        window.decorView.systemUiVisibility = (
-            View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-        )
+
+        // Default: hide bars (nice for TV/players); during video fullscreen we handle it explicitly too.
+        hideSystemBars()
 
         setContentView(R.layout.activity_main)
         webView = findViewById(R.id.webview)
+        fullscreenContainer = findViewById(R.id.fullscreen_container)
 
         webView.apply {
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
@@ -67,9 +70,90 @@ class MainActivity : ComponentActivity() {
             }
 
             webViewClient = WebViewClient()
-            webChromeClient = WebChromeClient()
+            webChromeClient = object : WebChromeClient() {
+                override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
+                    if (view == null) return
+                    if (customView != null) {
+                        callback?.onCustomViewHidden()
+                        return
+                    }
+
+                    // Save state
+                    originalOrientation = requestedOrientation
+                    customView = view
+                    customViewCallback = callback
+
+                    // Phone: force landscape in system fullscreen.
+                    // TV: already landscape (or locked elsewhere).
+                    val uiModeManager = getSystemService(UI_MODE_SERVICE) as UiModeManager
+                    val isTv = (uiModeManager.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION)
+                    if (!isTv) {
+                        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    }
+
+                    // Show fullscreen container
+                    fullscreenContainer.visibility = View.VISIBLE
+                    fullscreenContainer.addView(
+                        view,
+                        FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
+                            FrameLayout.LayoutParams.MATCH_PARENT
+                        )
+                    )
+
+                    // Hide system bars
+                    hideSystemBars()
+                }
+
+                override fun onHideCustomView() {
+                    val view = customView ?: return
+
+                    fullscreenContainer.removeView(view)
+                    fullscreenContainer.visibility = View.GONE
+
+                    customView = null
+                    customViewCallback?.onCustomViewHidden()
+                    customViewCallback = null
+
+                    // Restore orientation
+                    requestedOrientation = originalOrientation
+
+                    // Restore bars
+                    showSystemBars()
+                }
+            }
 
             loadUrl(KVIDEO_URL)
+        }
+    }
+
+    private fun hideSystemBars() {
+        // New API
+        val controller = window.insetsController
+        if (controller != null) {
+            controller.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+            controller.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        } else {
+            // Legacy flags
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            )
+        }
+    }
+
+    private fun showSystemBars() {
+        val controller = window.insetsController
+        if (controller != null) {
+            controller.show(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
         }
     }
 
