@@ -14,11 +14,6 @@ android {
         versionCode = 1
         versionName = "1.0.0"
     }
-        create("mobile") {
-            dimension = "device"
-            applicationIdSuffix = ".mobile"
-        }
-    }
 
     signingConfigs {
         create("release") {
