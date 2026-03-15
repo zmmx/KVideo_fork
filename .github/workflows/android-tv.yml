@@ -48,13 +48,28 @@ jobs:
 
       - name: Prepare keystore for release
         if: ${{ env.BUILD_TYPE == 'release' }}
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android-tv/app/keystore.jks
           echo "Keystore written to android-tv/app/keystore.jks"
+
           echo "ORG_GRADLE_PROJECT_keystoreFile=keystore.jks" >> $GITHUB_ENV
           echo "ORG_GRADLE_PROJECT_keystorePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
           echo "ORG_GRADLE_PROJECT_keyAlias=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
           echo "ORG_GRADLE_PROJECT_keyAliasPassword=${{ secrets.KEY_ALIAS_PASSWORD }}" >> $GITHUB_ENV
+
+          # Detect keystore type (JKS vs PKCS12) to avoid JDK17 default mismatch.
+          if keytool -list -keystore android-tv/app/keystore.jks -storepass "$KEYSTORE_PASSWORD" -storetype JKS >/dev/null 2>&1; then
+            echo "ORG_GRADLE_PROJECT_keystoreType=JKS" >> $GITHUB_ENV
+            echo "Keystore type: JKS"
+          elif keytool -list -keystore android-tv/app/keystore.jks -storepass "$KEYSTORE_PASSWORD" -storetype PKCS12 >/dev/null 2>&1; then
+            echo "ORG_GRADLE_PROJECT_keystoreType=PKCS12" >> $GITHUB_ENV
+            echo "Keystore type: PKCS12"
+          else
+            echo "Keystore unreadable: password/keystore mismatch" >&2
+            exit 1
+          fi
 
       - name: Build APK
         run: |

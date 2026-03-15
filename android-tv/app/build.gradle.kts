@@ -19,6 +19,10 @@ android {
         create("release") {
             val keystoreFile = findProperty("keystoreFile") as String?
             if (keystoreFile != null) {
+                // JDK17 default keystore type is PKCS12; many Android keystores are still JKS.
+                // Allow overriding via -PkeystoreType or ORG_GRADLE_PROJECT_keystoreType.
+                storeType = (findProperty("keystoreType") as String?) ?: "JKS"
+
                 storeFile = file(keystoreFile)
                 storePassword = findProperty("keystorePassword") as String
                 keyAlias = findProperty("keyAlias") as String
