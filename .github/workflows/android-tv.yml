@@ -43,12 +43,8 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: |
-            platforms;android-34
-            build-tools;34.0.0
-            platform-tools
-            ndk;25.2.9519653
-            cmake;3.22.1
+          # NOTE: setup-android expects a SPACE-separated string. Newlines get passed as one argument.
+          packages: "platform-tools platforms;android-34 build-tools;34.0.0 ndk;25.2.9519653 cmake;3.22.1"
 
       - name: Prepare keystore for release
         if: ${{ env.BUILD_TYPE == 'release' }}
