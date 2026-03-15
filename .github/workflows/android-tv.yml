@@ -20,7 +20,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      BUILD_TYPE: ${{ github.event.inputs.build_type || 'debug' }}
+      BUILD_TYPE: release
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,13 +59,8 @@ jobs:
       - name: Build APK
         run: |
           cd android-tv
-          if [ "$BUILD_TYPE" = "release" ]; then
-            echo "Building RELEASE with signing"
-            gradle --no-daemon assembleRelease
-          else
-            echo "Building DEBUG (tv flavor)"
-            gradle --no-daemon assembleDebug
-          fi
+          echo "Building RELEASE (single universal APK)"
+          gradle --no-daemon assembleRelease
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
           ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/25.2.9519653
