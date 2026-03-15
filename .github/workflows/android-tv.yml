@@ -61,10 +61,10 @@ jobs:
           cd android-tv
           if [ "$BUILD_TYPE" = "release" ]; then
             echo "Building RELEASE with signing"
-            gradle --no-daemon assembleRelease
+            gradle --no-daemon assembleTvRelease
           else
-            echo "Building DEBUG"
-            gradle --no-daemon assembleDebug
+            echo "Building DEBUG (tv flavor)"
+            gradle --no-daemon assembleTvDebug
           fi
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk

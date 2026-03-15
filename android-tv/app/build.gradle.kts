@@ -15,6 +15,18 @@ android {
         versionName = "1.0.0"
     }
 
+    flavorDimensions += "device"
+    productFlavors {
+        create("tv") {
+            dimension = "device"
+            applicationIdSuffix = ".tv"
+        }
+        create("mobile") {
+            dimension = "device"
+            applicationIdSuffix = ".mobile"
+        }
+    }
+
     signingConfigs {
         create("release") {
             val keystoreFile = findProperty("keystoreFile") as String?
