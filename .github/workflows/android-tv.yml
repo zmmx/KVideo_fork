@@ -75,5 +75,5 @@ jobs:
         with:
           name: kvideo-tv-${{ env.BUILD_TYPE }}
           path: |
-            android-tv/app/build/outputs/apk/debug/*.apk
-            android-tv/app/build/outputs/apk/release/*.apk
+            android-tv/app/build/outputs/apk/tv/debug/*.apk
+            android-tv/app/build/outputs/apk/tv/release/*.apk
