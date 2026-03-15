@@ -26,8 +26,7 @@
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:exported="true"
-            android:screenOrientation="landscape">
+            android:exported="true">
 
             <!-- Leanback launcher (Android TV home) -->
             <intent-filter>
