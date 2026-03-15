@@ -49,8 +49,8 @@ jobs:
       - name: Prepare keystore for release
         if: ${{ env.BUILD_TYPE == 'release' }}
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android-tv/keystore.jks
-          echo "Keystore written to android-tv/keystore.jks"
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android-tv/app/keystore.jks
+          echo "Keystore written to android-tv/app/keystore.jks"
           echo "ORG_GRADLE_PROJECT_keystoreFile=keystore.jks" >> $GITHUB_ENV
           echo "ORG_GRADLE_PROJECT_keystorePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
           echo "ORG_GRADLE_PROJECT_keyAlias=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
