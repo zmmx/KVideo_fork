@@ -14,13 +14,6 @@ android {
         versionCode = 1
         versionName = "1.0.0"
     }
-
-    flavorDimensions += "device"
-    productFlavors {
-        create("tv") {
-            dimension = "device"
-            applicationIdSuffix = ".tv"
-        }
         create("mobile") {
             dimension = "device"
             applicationIdSuffix = ".mobile"

@@ -61,10 +61,10 @@ jobs:
           cd android-tv
           if [ "$BUILD_TYPE" = "release" ]; then
             echo "Building RELEASE with signing"
-            gradle --no-daemon assembleTvRelease
+            gradle --no-daemon assembleRelease
           else
             echo "Building DEBUG (tv flavor)"
-            gradle --no-daemon assembleTvDebug
+            gradle --no-daemon assembleDebug
           fi
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
@@ -75,5 +75,5 @@ jobs:
         with:
           name: kvideo-tv-${{ env.BUILD_TYPE }}
           path: |
-            android-tv/app/build/outputs/apk/tv/debug/*.apk
-            android-tv/app/build/outputs/apk/tv/release/*.apk
+            android-tv/app/build/outputs/apk/debug/*.apk
+            android-tv/app/build/outputs/apk/release/*.apk

@@ -2,6 +2,9 @@ package com.kvideo.tv
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.app.UiModeManager
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
@@ -25,6 +28,13 @@ class MainActivity : ComponentActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Lock landscape on Android TV only; allow rotation on phones/tablets.
+        val uiModeManager = getSystemService(UI_MODE_SERVICE) as UiModeManager
+        val isTv = (uiModeManager.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION)
+        if (isTv) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        }
+
         super.onCreate(savedInstanceState)
 
         // Fullscreen immersive mode
