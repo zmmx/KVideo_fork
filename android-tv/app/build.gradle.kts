@@ -15,6 +15,8 @@ android {
         versionName = "1.0.0"
     }
 
+    val hasReleaseKeystore = (findProperty("keystoreFile") as String?)?.let { file(it).exists() } == true
+
     signingConfigs {
         create("release") {
             val keystoreFile = findProperty("keystoreFile") as String?
@@ -33,7 +35,10 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            // If a valid keystore is not provided in CI, sign release with debug keystore (still installable).
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt")
