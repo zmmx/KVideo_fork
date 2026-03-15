@@ -36,8 +36,10 @@ android {
     buildTypes {
         release {
             // If a valid keystore is not provided in CI, sign release with debug keystore (still installable).
-            if (hasReleaseKeystore) {
-                signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
             }
             isMinifyEnabled = true
             proguardFiles(
